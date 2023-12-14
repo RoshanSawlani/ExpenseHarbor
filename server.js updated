@@ -3,8 +3,8 @@ const cors = require("cors");
 const morgan = require("morgan");
 const dotenv = require("dotenv");
 const colors = require("colors");
-const path = require('path')
-const connectDb = require('./config/connectDb');  // Adjust the filename here
+const path = require('path');
+const mongoose = require('mongoose');
 
 // config dot env file
 dotenv.config();
@@ -12,7 +12,17 @@ dotenv.config();
 // database call
 async function startServer() {
     try {
-        await connectDb();
+        // Connect to MongoDB
+        const mongoURL = process.env.MONGO_URI;
+        if (!mongoURL) {
+            throw new Error('MongoDB URI is not defined');
+        }
+
+        await mongoose.connect(mongoURL, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        });
+
         console.log('Connected to the database'.bgCyan.white);
 
         // rest obj
@@ -25,15 +35,15 @@ async function startServer() {
 
         // routes
         // user routes 
-        app.use("/api/v1/users", require('./routes/userRoute'))
+        app.use("/api/v1/users", require('./routes/userRoute'));
 
         // transaction routes
-        app.use("/api/v1/transactions",require('./routes/transactionRoutes'))
+        app.use("/api/v1/transactions", require('./routes/transactionRoutes'));
 
         // static files
-        app.use(express.static(path.join(__dirname,'./client/build')))
-        app.get('*',function(req,res){
-            res.sendFile(path.join(__dirname,'./client/build/index.html'))
+        app.use(express.static(path.join(__dirname, './client/build')));
+        app.get('*', function (req, res) {
+            res.sendFile(path.join(__dirname, './client/build/index.html'));
         });
 
         // Port
